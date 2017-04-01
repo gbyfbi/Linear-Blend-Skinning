@@ -1,0 +1,20 @@
+FIND_PACKAGE(glm QUIET)
+IF (${glm_FOUND})
+	INCLUDE_DIRECTORIES(${glm_INCLUDE_DIR})
+	message(STATUS "Using System glm")
+ELSE (${glm_FOUND})
+	IF (EXISTS /usr/include/glm/glm.hpp)
+		message(STATUS "glm was found in default location")
+	ELSE ()
+		SET(expected_glm_dir ${CMAKE_SOURCE_DIR}/third-party/glm)
+		IF (NOT EXISTS ${expected_glm_dir}/copying.txt)
+			EXECUTE_PROCESS(COMMAND git clone -b 0.9.7.6 https://github.com/g-truc/glm.git ${expected_glm_dir})
+		ENDIF()
+		INCLUDE_DIRECTORIES(SYSTEM ${expected_glm_dir})
+		message(STATUS "Using bundled glm")
+	ENDIF ()
+ENDIF (${glm_FOUND})
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGLM_FORCE_SIZE_FUNC=1 -DGLM_FORCE_RADIANS=1")
+
+# vim: tw=78
