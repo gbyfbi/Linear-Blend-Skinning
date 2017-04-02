@@ -57,9 +57,6 @@ bool GUI::checkCylinderIntersection(vec3 origin, vec3 d, float max, float& st) {
 
 bool GUI::checkBoneHover()
 {
-	if(canSwitchBones==false) {
-		return false;
-	}
 	float minST = 10000.0f;
 	int idx = 0;
 	isIntersected = false;
@@ -80,16 +77,14 @@ bool GUI::checkBoneHover()
 
 			if(st < minST)//find one closest to eye's z direction
 			{
-				boneIntersected = pair;
-				setCurrentBone(pair[1]);
-				idxIntersected = idx;
+				setCurrentBone(idx);
 				minST = st;
 			}
 		}
 		++idx;
 	}
 	if(isIntersected == false)
-		idxIntersected = -1;
+		setCurrentBone(-1);
 
 	return isIntersected;
 }
@@ -205,12 +200,6 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 
 	else if (drag_bone && current_bone_ != -1) {
 		// FIXME: Handle bone rotation
-	
-		// GLint viewport[4];
-		
-		// glGetIntegerv( GL_VIEWPORT, viewport);	
-
-
 
 		vec3 drag_axis = unProject(mouse_direction, view_matrix_ * model_matrix_, projection_matrix_, vec4(viewport[0], viewport[1], viewport[2], viewport[3]));
 
@@ -231,13 +220,13 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	// FIXME: highlight bones that have been moused over
 	// current_bone_ = -1;
 }
-bool firsty = true;
 void GUI::mouseButtonCallback(int button, int action, int mods)
 {
-	if((current_button_ == GLFW_MOUSE_BUTTON_LEFT || firsty) && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	// cout << "got here\n";
+	if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
 		canSwitchBones = false;
-		firsty = false;
+		// cout << "lock down bone\n\n";
 	}
 
 	else if(current_button_ == GLFW_MOUSE_BUTTON_LEFT && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
@@ -246,12 +235,11 @@ void GUI::mouseButtonCallback(int button, int action, int mods)
 		axis = vec3(0.0f, 0.0f, 0.0f);
 		angle = 0.0f;
 		canSwitchBones = true;
-		idxIntersected = -1;
-		isIntersected = false;
+		// cout << "unlock bone\n\n";
 	}
 
-	drag_state_ = (action == GLFW_PRESS);
 	current_button_ = button;
+	drag_state_ = (action == GLFW_PRESS);
 }
 
 void GUI::updateMatrices()
@@ -322,7 +310,7 @@ bool GUI::captureWASDUPDOWN(int key, int action)
 			eye_ += pan_speed_ * up_;
 		else
 			center_ += pan_speed_ * up_;
-		return true;
+	return true;
 	}
 	return false;
 }
@@ -347,14 +335,8 @@ void GUI::MousePosCallback(GLFWwindow* window, double mouse_x, double mouse_y)
 
 	gui->ScreenToWorld(mouse_x, mouse_y);
 
-	isIntersected = gui->checkBoneHover();
-
-
-	if(!isIntersected) {
-	
-	} else {
-	
-	}
+	if(canSwitchBones)
+		isIntersected = gui->checkBoneHover();
 }
 
 void GUI::MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)

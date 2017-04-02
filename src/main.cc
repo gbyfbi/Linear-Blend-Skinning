@@ -63,7 +63,6 @@ vector<uvec2> cylLines;
 vector<vec4> cylVerts;
 bool firstTime = false;
 
-int oldIdxIntersected = -1;
 
 
 // FIXME: Add more shaders here.
@@ -269,7 +268,7 @@ void InitColorPass(int idx, Mesh mesh, RenderDataInput &color_pass_input, Render
 
 
 void InitSkelGL(Mesh &mesh, RenderDataInput &skeleton_pass_input, RenderPass &skeleton_pass, bool &firstTime, 
-	ShaderUniform std_view, ShaderUniform std_proj, bool rotation, mat4 R, int jointID)
+	ShaderUniform std_view, ShaderUniform std_proj, bool rotation, mat4 R, int lineID)
 {
 	//if a joint is rotated,
 	//update it and its children's offsets
@@ -277,7 +276,8 @@ void InitSkelGL(Mesh &mesh, RenderDataInput &skeleton_pass_input, RenderPass &sk
 	//of the vertices
 	if(rotation)
 	{
-		mesh.skeleton.updateOffsets(jointID, R);	
+		uvec2 line = mesh.skeleton.skel_lines[lineID];
+		mesh.skeleton.updateOffsets(line[1], R);	
 		mesh.skeleton.initVertsNLinesIter();
 	}	
 
@@ -509,13 +509,12 @@ int main(int argc, char* argv[])
 
 				mat4 R = glm::rotate(angle, axis);
 				InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, 
-				std_view, std_proj, true, R, gui.current_bone_/*oldIdxIntersected*/);
+				std_view, std_proj, true, R, gui.getCurrentBone());
 
 				skeleton_pass.setup();
 				CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));
 
-				InitColorPass(oldIdxIntersected, mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
-				// cout << "Bone Intersected: " << gui.boneIntersected[0] << ", " << gui.boneIntersected[1] << endl;
+				InitColorPass(gui.getCurrentBone(), mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
 				color_pass.setup();
 				CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
 			}
@@ -527,19 +526,15 @@ int main(int argc, char* argv[])
 				gui.setLinesNVerts(mesh.skeleton.skel_lines, mesh.skeleton.skel_vertices);
 			
 				if(gui.IsIntersected()) {
-					oldIdxIntersected = gui.idxIntersected;
-					InitColorPass(gui.idxIntersected, mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
-					// cout << "Bone Intersected: " << gui.boneIntersected[0] << ", " << gui.boneIntersected[1] << endl;
+					InitColorPass(gui.getCurrentBone(), mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
 					color_pass.setup();
 					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
 				}
 				else
 				{
-					oldIdxIntersected = -1;
 					if(!firstTime)
 					{
 						clearColorPass(color_pass_input, color_pass, std_view, std_proj);
-						// cout << "Bone Intersected: " << gui.boneIntersected[0] << ", " << gui.boneIntersected[1] << endl;
 						color_pass.setup();
 						CHECK_GL_ERROR(glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0));					
 					}

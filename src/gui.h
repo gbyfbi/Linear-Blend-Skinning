@@ -34,9 +34,6 @@ public:
 	bool checkCylinderIntersection(vec3 origin, vec3 d, float max, float& st);
 	bool IsIntersected();
 
-	uvec2 boneIntersected;
-	int idxIntersected;
-
 	vec3 axis;
 	float angle = rotation_speed_;
 	bool dragging = false;
