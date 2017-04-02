@@ -507,13 +507,9 @@ int main(int argc, char* argv[])
 				float angle = gui.angle;
 				vec3 axis = gui.axis;
 
-				// cout << "angle: " << angle << "\n";
-				// cout << "axis: " << axis << "\n\n";
-
-
 				mat4 R = glm::rotate(angle, axis);
 				InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, 
-				std_view, std_proj, true, R, gui.current_bone_);
+				std_view, std_proj, true, R, gui.current_bone_/*oldIdxIntersected*/);
 
 				skeleton_pass.setup();
 				CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));

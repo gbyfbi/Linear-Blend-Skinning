@@ -42,6 +42,7 @@ public:
 	bool dragging = false;
 	int current_bone_ = -1;
 
+
 	void ScreenToWorld(double mouse_x, double mouse_y);
 	void keyCallback(int key, int scancode, int action, int mods);
 	void mousePosCallback(double mouse_x, double mouse_y);

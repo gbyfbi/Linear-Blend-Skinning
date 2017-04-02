@@ -29,6 +29,7 @@ bool isIntersected;
 Ray r;
 vector<uvec2>lines;
 vector<vec4>verts;
+bool canSwitchBones = true;
 
 
 void GUI::setLinesNVerts(vector<uvec2> l, vector<vec4> v) {
@@ -56,6 +57,9 @@ bool GUI::checkCylinderIntersection(vec3 origin, vec3 d, float max, float& st) {
 
 bool GUI::checkBoneHover()
 {
+	if(canSwitchBones==false) {
+		return false;
+	}
 	float minST = 10000.0f;
 	int idx = 0;
 	isIntersected = false;
@@ -187,6 +191,7 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	// cout << "Ray pos == " << r.pos << ", d == " << r.d << endl;
 	
 	if (drag_camera) {
+
 		glm::vec3 _axis = glm::normalize(
 				orientation_ *
 				glm::vec3(mouse_direction.y, -mouse_direction.x, 0.0f)
@@ -201,9 +206,12 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	else if (drag_bone && current_bone_ != -1) {
 		// FIXME: Handle bone rotation
 	
-		GLint viewport[4];
+		// GLint viewport[4];
 		
-		glGetIntegerv( GL_VIEWPORT, viewport);	
+		// glGetIntegerv( GL_VIEWPORT, viewport);	
+
+
+
 		vec3 drag_axis = unProject(mouse_direction, view_matrix_ * model_matrix_, projection_matrix_, vec4(viewport[0], viewport[1], viewport[2], viewport[3]));
 
 		axis = cross(drag_axis, look_);
@@ -221,11 +229,27 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	}
 
 	// FIXME: highlight bones that have been moused over
-	current_bone_ = -1;
+	// current_bone_ = -1;
 }
-
+bool firsty = true;
 void GUI::mouseButtonCallback(int button, int action, int mods)
 {
+	if((current_button_ == GLFW_MOUSE_BUTTON_LEFT || firsty) && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+	{
+		canSwitchBones = false;
+		firsty = false;
+	}
+
+	else if(current_button_ == GLFW_MOUSE_BUTTON_LEFT && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
+	{
+		dragging = false;
+		axis = vec3(0.0f, 0.0f, 0.0f);
+		angle = 0.0f;
+		canSwitchBones = true;
+		idxIntersected = -1;
+		isIntersected = false;
+	}
+
 	drag_state_ = (action == GLFW_PRESS);
 	current_button_ = button;
 }
@@ -324,6 +348,8 @@ void GUI::MousePosCallback(GLFWwindow* window, double mouse_x, double mouse_y)
 	gui->ScreenToWorld(mouse_x, mouse_y);
 
 	isIntersected = gui->checkBoneHover();
+
+
 	if(!isIntersected) {
 	
 	} else {
