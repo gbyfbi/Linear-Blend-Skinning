@@ -187,12 +187,12 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	// cout << "Ray pos == " << r.pos << ", d == " << r.d << endl;
 	
 	if (drag_camera) {
-		glm::vec3 axis = glm::normalize(
+		glm::vec3 _axis = glm::normalize(
 				orientation_ *
 				glm::vec3(mouse_direction.y, -mouse_direction.x, 0.0f)
 				);
 		orientation_ =
-			glm::mat3(glm::rotate(rotation_speed_, axis) * glm::mat4(orientation_));
+			glm::mat3(glm::rotate(rotation_speed_, _axis) * glm::mat4(orientation_));
 		tangent_ = glm::column(orientation_, 0);
 		up_ = glm::column(orientation_, 1);
 		look_ = glm::column(orientation_, 2);
@@ -210,6 +210,14 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		angle = rotation_speed_;
 		dragging = true;
 		return ;
+	}
+
+	if(!drag_bone || current_bone_ == -1)
+	{
+		dragging = false;
+		axis = vec3(0.0f, 0.0f, 0.0f);
+		angle = 0.0f;
+
 	}
 
 	// FIXME: highlight bones that have been moused over

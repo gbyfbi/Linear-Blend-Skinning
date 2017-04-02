@@ -63,6 +63,8 @@ vector<uvec2> cylLines;
 vector<vec4> cylVerts;
 bool firstTime = false;
 
+int oldIdxIntersected = -1;
+
 
 // FIXME: Add more shaders here.
 
@@ -512,29 +514,40 @@ int main(int argc, char* argv[])
 				mat4 R = glm::rotate(angle, axis);
 				InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, 
 				std_view, std_proj, true, R, gui.current_bone_);
-			}
 
+				skeleton_pass.setup();
+				CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));
 
-			skeleton_pass.setup();
-			CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));
-
-			gui.setLinesNVerts(mesh.skeleton.skel_lines, mesh.skeleton.skel_vertices);
-		
-			if(gui.IsIntersected()) {
-				InitColorPass(gui.idxIntersected, mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
+				InitColorPass(oldIdxIntersected, mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
 				// cout << "Bone Intersected: " << gui.boneIntersected[0] << ", " << gui.boneIntersected[1] << endl;
 				color_pass.setup();
 				CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
 			}
 			else
 			{
-				if(!firstTime)
-				{
-					clearColorPass(color_pass_input, color_pass, std_view, std_proj);
+				skeleton_pass.setup();
+				CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));
+
+				gui.setLinesNVerts(mesh.skeleton.skel_lines, mesh.skeleton.skel_vertices);
+			
+				if(gui.IsIntersected()) {
+					oldIdxIntersected = gui.idxIntersected;
+					InitColorPass(gui.idxIntersected, mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
 					// cout << "Bone Intersected: " << gui.boneIntersected[0] << ", " << gui.boneIntersected[1] << endl;
 					color_pass.setup();
-					CHECK_GL_ERROR(glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0));					
+					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
 				}
+				else
+				{
+					oldIdxIntersected = -1;
+					if(!firstTime)
+					{
+						clearColorPass(color_pass_input, color_pass, std_view, std_proj);
+						// cout << "Bone Intersected: " << gui.boneIntersected[0] << ", " << gui.boneIntersected[1] << endl;
+						color_pass.setup();
+						CHECK_GL_ERROR(glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0));					
+					}
+				}			
 			}
 		}
 		if (draw_floor) {
