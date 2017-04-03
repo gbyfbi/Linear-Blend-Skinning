@@ -34,12 +34,14 @@ public:
 	bool checkCylinderIntersection(vec3 origin, vec3 d, float max, float& st);
 	bool IsIntersected();
 
-	vec3 axis;
+	vec3 axis = vec3(1.0f, 1.0f, 1.0f);
 	float angle = rotation_speed_;
 	bool dragging = false;
 	int current_bone_ = -1;
+	mat4 R = mat4(1.0f);
+	bool boneMovement = false;
 
-
+	void setBoneMovementMode();
 	void ScreenToWorld(double mouse_x, double mouse_y);
 	void keyCallback(int key, int scancode, int action, int mods);
 	void mousePosCallback(double mouse_x, double mouse_y);
@@ -76,7 +78,7 @@ private:
 	float last_x_ = 0.0f, last_y_ = 0.0f, current_x_ = 0.0f, current_y_ = 0.0f;
 	float camera_distance_ = 30.0;
 	float pan_speed_ = 0.1f;
-	float rotation_speed_ = 0.04f;
+	float rotation_speed_ = 0.1f;
 	float zoom_speed_ = 0.1f;
 	float aspect_;
 

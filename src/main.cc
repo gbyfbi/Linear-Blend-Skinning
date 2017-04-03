@@ -503,22 +503,30 @@ int main(int argc, char* argv[])
 		// Then draw floor.
 		if(draw_skeleton) {
 
-			if(gui.dragging) {
-				float angle = gui.angle;
-				vec3 axis = gui.axis;
+			if(gui.boneMovement)
+			{
+				if(gui.dragging) {
+					float angle = gui.angle;
+					vec3 axis = gui.axis;
 
-				mat4 R = glm::rotate(angle, axis);
-				InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, 
-				std_view, std_proj, true, R, gui.getCurrentBone());
+					cout << "angle: " << angle << endl;
+					cout << "axis: " << axis << endl;
 
-				skeleton_pass.setup();
-				CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));
+					mat4 R = glm::rotate(angle, axis);
+					// mat4 R = gui.R;
 
-				InitColorPass(gui.getCurrentBone(), mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
-				color_pass.setup();
-				CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
+					InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, 
+					std_view, std_proj, true, R, gui.getCurrentBone());
+
+					skeleton_pass.setup();
+					CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));
+
+					InitColorPass(gui.getCurrentBone(), mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
+					color_pass.setup();
+					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
+				}
 			}
-			else
+			if(!gui.boneMovement || (gui.boneMovement && !gui.dragging))
 			{
 				skeleton_pass.setup();
 				CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));

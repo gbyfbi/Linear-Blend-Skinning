@@ -131,6 +131,11 @@ void GUI::assignMesh(Mesh* mesh)
 	center_ = mesh_->getCenter();
 }
 
+void GUI::setBoneMovementMode()
+{
+	boneMovement = !boneMovement;
+}
+
 void GUI::keyCallback(int key, int scancode, int action, int mods)
 {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
@@ -139,6 +144,10 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	}
 	if (key == GLFW_KEY_J && action == GLFW_RELEASE) {
 		//FIXME save out a screenshot using SaveJPEG
+	}
+
+	if (key == GLFW_KEY_M && action == GLFW_RELEASE) {
+		setBoneMovementMode();
 	}
 
 	if (captureWASDUPDOWN(key, action))
@@ -201,10 +210,25 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 	else if (drag_bone && current_bone_ != -1) {
 		// FIXME: Handle bone rotation
 
+		// cout << "in mouse pos \n\n";
+
 		vec3 drag_axis = unProject(mouse_direction, view_matrix_ * model_matrix_, projection_matrix_, vec4(viewport[0], viewport[1], viewport[2], viewport[3]));
+		// vec4 mouse_direction4 = vec4(mouse_direction, 1.0f);
+		// vec4 drag_axis4 = glm::inverse(view_matrix_) * mouse_direction4;
+		// vec3 drag_axis(drag_axis4[0], drag_axis4[1], drag_axis4[2]);
+
+		// vec4 ax(drag_axis, 1.0f);
+		// ax = R * ax;
+		// axis = vec3(ax[0], ax[1], ax[2]);
+
+		// axis = cross(axis, look_);
+		// angle = rotation_speed_;
+		// R = glm::rotate(angle, axis) * R;
 
 		axis = cross(drag_axis, look_);
 		angle = rotation_speed_;
+		R = glm::rotate(angle, axis);
+
 		dragging = true;
 		return ;
 	}
