@@ -503,9 +503,33 @@ int main(int argc, char* argv[])
 		// Then draw floor.
 		if(draw_skeleton) {
 
-			if(gui.boneMovement)
+			bool bM = gui.canBonesMove();
+			bool roll = gui.shouldRoll && gui.getCurrentBone()!=-1;
+			bool drag = gui.dragging;
+
+			if(bM)
 			{
-				if(gui.dragging) {
+
+				if(roll)
+				{
+					float angle = gui.rollAngle;
+					vec3 axis = mesh.skeleton.getTFromLineID(gui.getCurrentBone());
+
+					mat4 R = glm::rotate(angle, axis);
+					// mat4 R = gui.R;
+
+					InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, 
+					std_view, std_proj, true, R, gui.getCurrentBone());
+
+					skeleton_pass.setup();
+					CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));
+
+					InitColorPass(gui.getCurrentBone(), mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
+					color_pass.setup();
+					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
+
+				}
+				if(drag) {
 					float angle = gui.angle;
 					vec3 axis = gui.axis;
 
@@ -526,7 +550,7 @@ int main(int argc, char* argv[])
 					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
 				}
 			}
-			if(!gui.boneMovement || (gui.boneMovement && !gui.dragging))
+			if((!bM)||(bM && !drag && !roll))
 			{
 				skeleton_pass.setup();
 				CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));

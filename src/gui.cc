@@ -30,6 +30,12 @@ Ray r;
 vector<uvec2>lines;
 vector<vec4>verts;
 bool canSwitchBones = true;
+bool boneMovement = false;
+
+bool GUI::canBonesMove()
+{
+	return boneMovement;
+}
 
 
 void GUI::setLinesNVerts(vector<uvec2> l, vector<vec4> v) {
@@ -146,19 +152,30 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 		//FIXME save out a screenshot using SaveJPEG
 	}
 
+
 	if (key == GLFW_KEY_M && action == GLFW_RELEASE) {
 		setBoneMovementMode();
 	}
 
 	if (captureWASDUPDOWN(key, action))
 		return ;
-	if (key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT) {
-		float roll_speed;
+	if ((key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT) && action == GLFW_PRESS) {
+		if(current_bone_ == -1 || boneMovement == false)
+			return;
+
 		if (key == GLFW_KEY_RIGHT)
-			roll_speed = -roll_speed_;
+			rollAngle = -roll_speed_;
 		else
-			roll_speed = roll_speed_;
-		// FIXME: actually roll the bone here
+			rollAngle = roll_speed_;
+		shouldRoll = true;
+
+
+	} 
+	else if ((key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT)  && action == GLFW_RELEASE) {
+		if(current_bone_ == -1 || boneMovement == false)
+			return;
+		shouldRoll = false;
+		rollAngle = 0.0f;
 	} else if (key == GLFW_KEY_C && action != GLFW_RELEASE) {
 		fps_mode_ = !fps_mode_;
 	} else if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_RELEASE) {
@@ -359,7 +376,7 @@ void GUI::MousePosCallback(GLFWwindow* window, double mouse_x, double mouse_y)
 
 	gui->ScreenToWorld(mouse_x, mouse_y);
 
-	if(canSwitchBones)
+	if(!boneMovement || (boneMovement && canSwitchBones))
 		isIntersected = gui->checkBoneHover();
 }
 
