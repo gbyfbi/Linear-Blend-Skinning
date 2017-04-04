@@ -65,6 +65,7 @@ bool GUI::checkBoneHover()
 {
 	float minST = 10000.0f;
 	int idx = 0;
+	int goodIdx = -1;
 	isIntersected = false;
 	for(uvec2 pair: lines)
 	{
@@ -83,14 +84,16 @@ bool GUI::checkBoneHover()
 
 			if(st < minST)//find one closest to eye's z direction
 			{
-				setCurrentBone(idx);
+				goodIdx = idx;
+
+				cout << "setting current bone to: " << idx << "\n";
+
 				minST = st;
 			}
 		}
 		++idx;
 	}
-	if(isIntersected == false)
-		setCurrentBone(-1);
+	setCurrentBone(goodIdx);
 
 	return isIntersected;
 }
@@ -160,7 +163,7 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	if (captureWASDUPDOWN(key, action))
 		return ;
 	if ((key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT) && action == GLFW_PRESS) {
-		if(current_bone_ == -1 || boneMovement == false)
+		if(drag_state_ ||canSwitchBones || current_bone_ == -1 || boneMovement == false)
 			return;
 
 		if (key == GLFW_KEY_RIGHT)
@@ -169,13 +172,15 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 			rollAngle = roll_speed_;
 		shouldRoll = true;
 
+		canSwitchBones = false;
 
 	} 
 	else if ((key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT)  && action == GLFW_RELEASE) {
-		if(current_bone_ == -1 || boneMovement == false)
+		if(drag_state_  || current_bone_ == -1 || boneMovement == false)
 			return;
 		shouldRoll = false;
 		rollAngle = 0.0f;
+		canSwitchBones = true;
 	} else if (key == GLFW_KEY_C && action != GLFW_RELEASE) {
 		fps_mode_ = !fps_mode_;
 	} else if (key == GLFW_KEY_LEFT_BRACKET && action == GLFW_RELEASE) {
@@ -208,9 +213,6 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 
 	bool drag_camera = drag_state_ && current_button_ == GLFW_MOUSE_BUTTON_RIGHT;
 	bool drag_bone = drag_state_ && current_button_ == GLFW_MOUSE_BUTTON_LEFT;
-	
-	// cout << "Ray pos == " << r.pos << ", d == " << r.d << endl;
-	
 	if (drag_camera) {
 
 		glm::vec3 _axis = glm::normalize(
@@ -271,11 +273,9 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 }
 void GUI::mouseButtonCallback(int button, int action, int mods)
 {
-	// cout << "got here\n";
 	if(button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
 	{
 		canSwitchBones = false;
-		// cout << "lock down bone\n\n";
 	}
 
 	else if(current_button_ == GLFW_MOUSE_BUTTON_LEFT && button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
@@ -284,7 +284,6 @@ void GUI::mouseButtonCallback(int button, int action, int mods)
 		axis = vec3(0.0f, 0.0f, 0.0f);
 		angle = 0.0f;
 		canSwitchBones = true;
-		// cout << "unlock bone\n\n";
 	}
 
 	current_button_ = button;
