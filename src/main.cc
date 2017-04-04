@@ -529,12 +529,12 @@ int main(int argc, char* argv[])
 					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
 
 				}
-				if(drag) {
+				else if(drag) {
 					float angle = gui.angle;
 					vec3 axis = gui.axis;
 
-					cout << "angle: " << angle << endl;
-					cout << "axis: " << axis << endl;
+					// cout << "angle: " << angle << endl;
+					// cout << "axis: " << axis << endl;
 
 					mat4 R = glm::rotate(angle, axis);
 					// mat4 R = gui.R;

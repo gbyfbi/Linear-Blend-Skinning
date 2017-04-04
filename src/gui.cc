@@ -229,10 +229,8 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 
 		// cout << "in mouse pos \n\n";
 
-		vec3 drag_axis = unProject(mouse_direction, view_matrix_ * model_matrix_, projection_matrix_, vec4(viewport[0], viewport[1], viewport[2], viewport[3]));
-		// vec4 mouse_direction4 = vec4(mouse_direction, 1.0f);
-		// vec4 drag_axis4 = glm::inverse(view_matrix_) * mouse_direction4;
-		// vec3 drag_axis(drag_axis4[0], drag_axis4[1], drag_axis4[2]);
+		// vec3 drag_axis = unProject(mouse_direction, view_matrix_ * model_matrix_, projection_matrix_, vec4(viewport[0], viewport[1], viewport[2], viewport[3]));
+		
 
 		// vec4 ax(drag_axis, 1.0f);
 		// ax = R * ax;
@@ -242,7 +240,17 @@ void GUI::mousePosCallback(double mouse_x, double mouse_y)
 		// angle = rotation_speed_;
 		// R = glm::rotate(angle, axis) * R;
 
+		vec4 mouse_direction4 = vec4(mouse_direction * 1000.0f, 1.0f);
+		vec4 drag_axis4 = glm::inverse(projection_matrix_ * view_matrix_) * mouse_direction4;
+		vec3 drag_axis(drag_axis4[0], drag_axis4[1], drag_axis4[2]);
+
+
+
+
 		axis = cross(drag_axis, look_);
+
+
+
 		angle = rotation_speed_;
 		R = glm::rotate(angle, axis);
 

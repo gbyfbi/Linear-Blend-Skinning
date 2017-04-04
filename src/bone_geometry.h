@@ -412,9 +412,16 @@ struct Skeleton {
 		return vec3(V[0], V[1], V[2]);
 	}
 
+
+	vec3 getTFromLineID(int lineID)
+	{
+		uvec2 line = skel_lines.at(lineID);
+		Joint *j = joints.at(line[1]);
+		return normalize(j->offset);
+	}
+
 	void updateOffsets(int ID, mat4 R)
 	{
-
 		if(!legalID(ID, joints.size()))
 		{
 			// cout << "not legal ID: " << ID << "\n\n";
