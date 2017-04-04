@@ -38,6 +38,7 @@ struct Bone {
 	Bone() {};
 	~Bone() {};
 
+	int ID;
 	Joint* source;
 	Joint* destination;
 	float length;
@@ -56,7 +57,7 @@ struct Bone {
 		length = l;
 		origin = o;//same as offset of parent
 		t = t0;
-
+		ID = -1;
 	//calculate n and b axes
 
 		vec3 v(0.0, 0.0, 0.0);
@@ -273,7 +274,8 @@ struct Skeleton {
  					calculateBigT(T, j->offset);                   
 
                     Bone* b = new Bone(p, j, l, p->offset, t, T, R);
-                    this->bones.push_back(b);
+                    b->ID = bones.size();
+		    this->bones.push_back(b);
 
     				vector<Bone*> jointBones;
                     try{
@@ -310,6 +312,16 @@ struct Skeleton {
         setUpChildJoints();
 
 
+	}
+
+	vector<Bone*> retJointBones(int ID) {
+		try {
+			vector<Bone*> goodOutput = jointIDBoneMap.at(ID);
+			return goodOutput;
+		} catch(out_of_range &e) {
+			vector<Bone*> badOutput;
+			return badOutput; 
+		}
 	}
 
 	void printIDBoneMap()

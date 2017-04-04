@@ -3,6 +3,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <algorithm>
 
 using namespace std;
 
@@ -46,8 +47,7 @@ void Mesh::loadpmd(const std::string& fn)
         computeBounds();
         mr.getMaterial(materials);
 
-
-        //read the joints in
+	//read the joints in
         int i = 0;
         int parent = 0;
         vec3 offs;
@@ -73,6 +73,41 @@ void Mesh::loadpmd(const std::string& fn)
 
         // FIXME: load skeleton and blend weights from PMD file
         //        also initialize the skeleton as needed
+
+
+        //A SparseTuple has { int jid, vid; float weight; }
+        //jid == joint_id, vid == vertex_id
+
+        std::vector<SparseTuple> tup;
+        mr.getJointWeights(tup);
+        //std::map<int, vector<pair<int,int>>> boneWeights;
+
+        int max_vec = 0;
+        for (int i = 0; i < tup.size(); i++) {
+                max_vec = std::max(max_vec, tup.at(i).vid); 
+    
+        }
+        cout << "num connections: " << tup.size() << endl;
+        cout << "max vec_id: " << max_vec << endl;	
+		
+	vector<Bone*> boneChildren;
+	int boneMatrix [skeleton.bones.size()][max_vec]; 
+	int idCounter = 0;   
+	for (int i = 0; i < tup.size(); i++) {
+		int jointNum = tup[i].jid;
+		boneChildren.clear();
+		boneChildren = skeleton.retJointBones(i);
+		for (int j = 0; j < boneChildren.size(); j++) {
+			Bone* b = boneChildren.at(j);
+			if (b->ID != -1) {
+				boneMatrix[b->ID][tup[i].vid] = tup[i].weight;
+			} else {
+				b->ID = idCounter;
+				idCounter++;
+				boneMatrix[b->ID][tup[i].vid] = tup[i].weight;
+			}
+		}
+	}
 }
 
 
