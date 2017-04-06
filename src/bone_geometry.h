@@ -123,6 +123,14 @@ struct Skeleton {
 		return joints.at(ID);
 	}
 
+	Bone* getBoneFromID(int ID) {
+	        for (int i = 0; i < bones.size(); i++) {
+	                if (bones.at(i)->ID == ID) {
+	                        return bones.at(i);
+	                }
+	        }
+	}
+
 	void calculateAxes(vec3 t, vec3 &n, vec3 &b)
 	{
 		vec3 v(0.0, 0.0, 0.0);
