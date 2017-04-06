@@ -467,12 +467,6 @@ struct Skeleton {
 		}
 	}
 
-
-	void calculateU(Bone* b) {
-		mat4 U;
-		b->
-	}
-
 	void initVertsNLinesIter()
 	{
 		skel_vertices.clear();
@@ -525,7 +519,7 @@ struct Skeleton {
 					}
 				}
 
-				skel_vertices[i] = 	translate(j->offset) * U * skel_vertices[0];
+				skel_vertices[i] = 	translate(j->offset) * getParentWP(j->pID);
 			}
 		}
 
@@ -534,33 +528,32 @@ struct Skeleton {
 			Bone* bone = bones.at(i);
 			skel_lines.push_back(uvec2(bone->source->ID, bone->destination->ID));
 			change_color.push_back(0.0f);
-			calculateU(bone);
 		}
 	}
 
 
-	// vec4 getParentWP(int pID)
-	// {
-	// 	if(pID==0)
-	// 		return skel_vertices[0];
+	vec4 getParentWP(int pID)
+	{
+		if(pID==0)
+			return skel_vertices[0];
 
-	// 	Joint *p = joints.at(pID);
-	// 	int gID = -1;
-	// 	gID = p->pID;
-	// 	if(!legalID(gID, joints.size()))
-	// 	{
-	// 		cout << "p is: " << p->ID << "\n";		
-	// 	}
-	// 	else
-	// 	{
-	// 		if(skel_vertices[pID][0]==-1 && skel_vertices[pID][1]==-1 && skel_vertices[pID][2]==-1 && skel_vertices[pID][3]==-1)
-	// 			return skel_vertices[pID];
+		Joint *p = joints.at(pID);
+		int gID = -1;
+		gID = p->pID;
+		if(!legalID(gID, joints.size()))
+		{
+			cout << "p is: " << p->ID << "\n";		
+		}
+		else
+		{
+			if(skel_vertices[pID][0]==-1 && skel_vertices[pID][1]==-1 && skel_vertices[pID][2]==-1 && skel_vertices[pID][3]==-1)
+				return skel_vertices[pID];
 
-	// 		return translate(p->offset) * getParentWP(gID);
-	// 	}
-	// }
+			return translate(p->offset) * getParentWP(gID);
+		}
+	}
 
-	vec4 getParentWP2(int pID)
+	mat4 getParentWP2(int pID)
 	{
 		if(pID==0)
 			mat4(1.0f);
@@ -574,8 +567,8 @@ struct Skeleton {
 		}
 		else
 		{
-			if(skel_vertices[pID][0]==-1 && skel_vertices[pID][1]==-1 && skel_vertices[pID][2]==-1 && skel_vertices[pID][3]==-1)
-				return skel_vertices[pID];
+			// if(skel_vertices[pID][0]==-1 && skel_vertices[pID][1]==-1 && skel_vertices[pID][2]==-1 && skel_vertices[pID][3]==-1)
+			// 	return skel_vertices[pID];
 
 			return translate(p->offset) * getParentWP2(gID);
 		}

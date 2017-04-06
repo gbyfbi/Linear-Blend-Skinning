@@ -268,7 +268,7 @@ void InitColorPass(int idx, Mesh mesh, RenderDataInput &color_pass_input, Render
 
 
 void InitSkelGL(Mesh &mesh, RenderDataInput &skeleton_pass_input, RenderPass &skeleton_pass, bool &firstTime, 
-	ShaderUniform std_view, ShaderUniform std_proj, bool rotation, mat4 R, int lineID)
+	ShaderUniform std_view, ShaderUniform std_proj, bool rotation, mat4 R, int lineID, bool roll)
 {
 	//if a joint is rotated,
 	//update it and its children's offsets
@@ -277,7 +277,7 @@ void InitSkelGL(Mesh &mesh, RenderDataInput &skeleton_pass_input, RenderPass &sk
 	if(rotation)
 	{
 		uvec2 line = mesh.skeleton.skel_lines[lineID];
-		mesh.skeleton.updateOffsets(line[1], R);	
+		mesh.skeleton.updateOffsets(line[1], R);
 		mesh.skeleton.initVertsNLinesIter();
 	}	
 
@@ -460,7 +460,7 @@ int main(int argc, char* argv[])
 
 	bool skelFirstTime = true;
 	mat4 R;
-	InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, std_view, std_proj, false, R, -1);
+	InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, std_view, std_proj, false, R, -1, false);
 
 
 
@@ -509,45 +509,53 @@ int main(int argc, char* argv[])
 
 			if(bM)
 			{
-
+				int curBone = gui.getCurrentBone();
 				if(roll)
 				{
 					float angle = gui.rollAngle;
-					vec3 axis = mesh.skeleton.getTFromLineID(gui.getCurrentBone());
+					vec3 axis = mesh.skeleton.getTFromLineID(curBone);
+
+					// float angle = gui.angle;
+					// vec3 axis = gui.axis;
 
 					mat4 R = glm::rotate(angle, axis);
 					// mat4 R = gui.R;
 
 					InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, 
-					std_view, std_proj, true, R, gui.getCurrentBone());
+					std_view, std_proj, true, R, curBone, false);
 
 					skeleton_pass.setup();
 					CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));
 
-					InitColorPass(gui.getCurrentBone(), mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
+					InitColorPass(curBone, mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
 					color_pass.setup();
 					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
 
+					mesh.updateAnimation();
+					object_pass.updateVBO(0,
+				      mesh.animated_vertices.data(),
+				      mesh.animated_vertices.size());
 				}
 				else if(drag) {
 					float angle = gui.angle;
 					vec3 axis = gui.axis;
-
-					// cout << "angle: " << angle << endl;
-					// cout << "axis: " << axis << endl;
-
 					mat4 R = glm::rotate(angle, axis);
-					// mat4 R = gui.R;
 
 					InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, 
-					std_view, std_proj, true, R, gui.getCurrentBone());
+					std_view, std_proj, true, R, curBone, false);
 
 					skeleton_pass.setup();
 					CHECK_GL_ERROR(glDrawElements(GL_LINES, mesh.skeleton.skel_lines.size() * 2, GL_UNSIGNED_INT, 0));
 
-					InitColorPass(gui.getCurrentBone(), mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
+					InitColorPass(curBone, mesh, color_pass_input, color_pass, firstTime, std_view, std_proj);
 					color_pass.setup();
 					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
+
+					mesh.updateAnimation();
+					object_pass.updateVBO(0,
+				      mesh.animated_vertices.data(),
+				      mesh.animated_vertices.size());
+
 				}
 			}
 			if((!bM)||(bM && !drag && !roll))

@@ -25,7 +25,7 @@ std::ostream& operator<<(std::ostream& os, const BoundingBox& bounds)
 }
 
 
-vector<vector<int> > boneMatrix;
+vector<vector<float> > boneMatrix;
 // FIXME: Implement bone animation.
 
 
@@ -47,7 +47,7 @@ void Mesh::loadpmd(const std::string& fn)
         computeBounds();
         mr.getMaterial(materials);
 
-	//read the joints in
+        //read the joints in
         int i = 0;
         int parent = 0;
         vec3 offs;
@@ -62,7 +62,7 @@ void Mesh::loadpmd(const std::string& fn)
                         assert(parent == -1);
 //                        std::cout << "\n\nfound root\n\n";
                 }
-                	
+                        
 
                 j->offset = offs;
                 this->skeleton.joints.insert(std::make_pair(i, j));
@@ -88,44 +88,39 @@ void Mesh::loadpmd(const std::string& fn)
     
         }
         cout << "num connections: " << tup.size() << endl;
-        cout << "max vec_id: " << max_vec << endl;	
-		
-	vector<Bone*> boneChildren;
-
-        boneMatrix = vector<vector<int> >(skeleton.bones.size());
+        cout << "max vec_id: " << max_vec << endl;      
 
 //        boneMatrix = new int[skeleton.bones.size()][max_vec];//each row corresponds to one bone (one source joint),
                                                         //and within each row, the elements correspond to different mesh vertices
                                                         //on which the bone has influence
-	int idCounter = 0;   
-	for (int i = 0; i < tup.size(); i++) {
-		int jointNum = tup[i].jid;
-		boneChildren.clear();
-		boneChildren = skeleton.retJointBones(i);
-		for (int j = 0; j < boneChildren.size(); j++) {
-		
-                        vector<int> thisSource (max_vec);
+     
+
+        for(int r = 0; r<skeleton.bones.size(); ++r) {
+                vector<float> row(max_vec);
+                boneMatrix.push_back(row);
+        }
 
 
-                	Bone* b = boneChildren.at(j);
-			if (b->ID != -1) {
-                                thisJoint[tup[i].vid] = tup[i].weight;
+        int idCounter = 0;   
+        for (int i = 0; i < tup.size(); i++) {
+            
+                //get the list of bones that starts at source joint with ID jid
+                int jointNum = tup[i].jid;
+                vector<Bone*> boneChildren = skeleton.retJointBones(jointNum);
 
+                for (int j = 0; j < boneChildren.size(); j++) {
 
-				boneMatrix->[b->ID][tup[i].vid] = tup[i].weight;
-			} else {
-				b->ID = idCounter;
-				idCounter++;
+                        Bone* b = boneChildren.at(j);
+                        if (b->ID != -1) {
+                                boneMatrix[b->ID][tup[i].vid] = tup[i].weight;
+                        } else {
+                                b->ID = idCounter;
+                                idCounter++;
 
-
-				boneMatrix->[b->ID][tup[i].vid] = tup[i].weight;
-			}
-		}
-	}
-
-
-
-
+                                boneMatrix[b->ID][tup[i].vid] = tup[i].weight;
+                        }
+                }
+        }
 }
 
 
@@ -136,16 +131,22 @@ void Mesh::updateAnimation()
         // FIXME: blend the vertices to animated_vertices, rather than copy
         //        the data directly.
 
-        for(int i = 0; i < animated_vertices.size(); i++)
-        {
-                vec4 v = animated_vertices.at(i);
-                Bone* b = skeleton.getBoneFromID(i);
-                vec4 newV(0.0);
-                for(int j = 0; j < skeleton.bones.size(); j++) {
-                        newV += boneMatrix->[j][i] * b->D * inverse(b->U) * v;
-                }
-                animated_vertices.at(i) = newV;
-        }
+        // for(int i = 0; i < vertices.size(); ++i)
+        // {
+        //         vec4 v = vertices.at(i);
+        //         vec4 newV(0.0);
+        //         for(int j = 0; j < skeleton.bones.size(); ++j) {
+        //                 Bone* b = skeleton.getBoneFromID(j);
+        //                 float weight = boneMatrix[j][i]; 
+        //                 newV += boneMatrix[j][i] * b->D * inverse(b->U) * v;
+        //         }
+        // }
+
+
+        // for(int i = 0; i<animated_vertices.size(); ++i)
+        // {
+        //         cout << "vertex: " << animated_vertices.at(i) << endl; 
+        // }
 
 }
 
