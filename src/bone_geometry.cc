@@ -91,7 +91,9 @@ void Mesh::loadpmd(const std::string& fn)
         cout << "max vec_id: " << max_vec << endl;	
 		
 	vector<Bone*> boneChildren;
-	int boneMatrix [skeleton.bones.size()][max_vec]; 
+	int boneMatrix [skeleton.bones.size()][max_vec];//each row corresponds to one bone (one source joint),
+                                                        //and within each row, the elements correspond to different mesh vertices
+                                                        //on which the bone has influence
 	int idCounter = 0;   
 	for (int i = 0; i < tup.size(); i++) {
 		int jointNum = tup[i].jid;
@@ -108,6 +110,10 @@ void Mesh::loadpmd(const std::string& fn)
 			}
 		}
 	}
+
+
+
+        
 }
 
 

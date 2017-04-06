@@ -39,6 +39,8 @@ struct Bone {
 	~Bone() {};
 
 	int ID;
+	mat4 U;
+	mat4 D;
 	Joint* source;
 	Joint* destination;
 	float length;
@@ -94,6 +96,8 @@ struct Skeleton {
 	//maps IDs to children IDs
 	std::unordered_map<int, vector<int>> childJoints;
 
+	std::unordered_map<int, mat4> boneUMap;
+
 	
 	//maps a joint's ID to the list of bones where that joint
 	//is the source (can be more than one bone with the same source)
@@ -102,6 +106,8 @@ struct Skeleton {
 	std::vector<glm::vec4> skel_vertices;
 	std::vector<glm::uvec2> skel_lines;
 	vector<float> change_color;
+
+	bool calculatedU = false;
 
 	//should be exclusive of limit:
 	//think of limit as the number of bones
@@ -324,6 +330,7 @@ struct Skeleton {
 		}
 	}
 
+
 	void printIDBoneMap()
 	{
 		cout << "\n--------------------------------\n";
@@ -453,6 +460,11 @@ struct Skeleton {
 	}
 
 
+	void calculateU(Bone* b) {
+		mat4 U;
+		b->
+	}
+
 	void initVertsNLinesIter()
 	{
 		skel_vertices.clear();
@@ -487,7 +499,25 @@ struct Skeleton {
 			Joint *j = joints.at(i);
 			if(skel_vertices[i][0]==-1 && skel_vertices[i][1]==-1 && skel_vertices[i][2]==-1 && skel_vertices[i][3]==-1)
 			{
-				skel_vertices[i] = 	translate(j->offset) * getParentWP(j->pID);
+				mat4 U(getParentWP2(j->pID));
+
+				if(calculatedU == false)
+				{
+					vector<Bone *> boneChildren = retJointBones(i);
+					for (int i = 0; i < boneChildren.size(); i++) {
+						boneChildren.at(i)->U = U;
+					}
+					calculatedU = true;			
+				}
+				else
+				{
+					vector<Bone *> boneChildren = retJointBones(i);
+					for (int i = 0; i < boneChildren.size(); i++) {
+						boneChildren.at(i)->D = U;
+					}
+				}
+
+				skel_vertices[i] = 	translate(j->offset) * U * skel_vertices[0];
 			}
 		}
 
@@ -496,14 +526,36 @@ struct Skeleton {
 			Bone* bone = bones.at(i);
 			skel_lines.push_back(uvec2(bone->source->ID, bone->destination->ID));
 			change_color.push_back(0.0f);
+			calculateU(bone);
 		}
 	}
 
 
-	vec4 getParentWP(int pID)
+	// vec4 getParentWP(int pID)
+	// {
+	// 	if(pID==0)
+	// 		return skel_vertices[0];
+
+	// 	Joint *p = joints.at(pID);
+	// 	int gID = -1;
+	// 	gID = p->pID;
+	// 	if(!legalID(gID, joints.size()))
+	// 	{
+	// 		cout << "p is: " << p->ID << "\n";		
+	// 	}
+	// 	else
+	// 	{
+	// 		if(skel_vertices[pID][0]==-1 && skel_vertices[pID][1]==-1 && skel_vertices[pID][2]==-1 && skel_vertices[pID][3]==-1)
+	// 			return skel_vertices[pID];
+
+	// 		return translate(p->offset) * getParentWP(gID);
+	// 	}
+	// }
+
+	vec4 getParentWP2(int pID)
 	{
 		if(pID==0)
-			return skel_vertices[0];
+			mat4(1.0f);
 
 		Joint *p = joints.at(pID);
 		int gID = -1;
@@ -517,9 +569,12 @@ struct Skeleton {
 			if(skel_vertices[pID][0]==-1 && skel_vertices[pID][1]==-1 && skel_vertices[pID][2]==-1 && skel_vertices[pID][3]==-1)
 				return skel_vertices[pID];
 
-			return translate(p->offset) * getParentWP(gID);
+			return translate(p->offset) * getParentWP2(gID);
 		}
 	}
+
+
+
 	// FIXME: create skeleton and bone data structures
 };
 
