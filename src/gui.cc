@@ -163,7 +163,7 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 	if (captureWASDUPDOWN(key, action))
 		return ;
 	if ((key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT) && action == GLFW_PRESS) {
-		if(drag_state_ ||canSwitchBones || current_bone_ == -1 || boneMovement == false)
+		if(!canSwitchBones || current_bone_ == -1 || boneMovement == false)
 			return;
 
 		if (key == GLFW_KEY_RIGHT)
@@ -176,7 +176,7 @@ void GUI::keyCallback(int key, int scancode, int action, int mods)
 
 	} 
 	else if ((key == GLFW_KEY_LEFT || key == GLFW_KEY_RIGHT)  && action == GLFW_RELEASE) {
-		if(drag_state_  || current_bone_ == -1 || boneMovement == false)
+		if(current_bone_ == -1 || boneMovement == false)
 			return;
 		shouldRoll = false;
 		rollAngle = 0.0f;
