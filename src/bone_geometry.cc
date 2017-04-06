@@ -87,6 +87,7 @@ void Mesh::loadpmd(const std::string& fn)
                 max_vec = std::max(max_vec, tup.at(i).vid); 
     
         }
+        ++max_vec;
         cout << "num connections: " << tup.size() << endl;
         cout << "max vec_id: " << max_vec << endl;      
 
@@ -111,16 +112,46 @@ void Mesh::loadpmd(const std::string& fn)
                 for (int j = 0; j < boneChildren.size(); j++) {
 
                         Bone* b = boneChildren.at(j);
-                        if (b->ID != -1) {
-                                boneMatrix[b->ID][tup[i].vid] = tup[i].weight;
-                        } else {
-                                b->ID = idCounter;
-                                idCounter++;
+                        // if (b->ID != -1) {
 
-                                boneMatrix[b->ID][tup[i].vid] = tup[i].weight;
-                        }
+                                float weight = tup[i].weight;
+
+                                boneMatrix.at(b->ID).at(tup[i].vid) = weight;
+
+                        // } else {
+                        //         b->ID = idCounter;
+                                
+                        //         cout << "idCounter is: " << idCounter << endl;
+
+                        //         idCounter++;
+
+                        //         skeleton.BoneIDMap.insert(std::make_pair(b->ID, b));
+
+                        //         boneMatrix[b->ID][tup[i].vid] = tup[i].weight;
+                        // }
                 }
         }
+
+
+
+
+        // for(int i = 0; i < skeleton.bones.size(); ++i)
+        // {
+        //         Bone* b = skeleton.bones.at(i);
+        //         cout << "bone ID is: " << b->ID << endl;
+
+
+
+        //         // try{
+        //         //         cout << "bone number: " << i <<  " is " << skeleton.BoneIDMap.at(i) << endl;                       
+        //         // }
+        //         // catch( out_of_range &e)
+        //         // {
+        //         //         cout << "bad bone ID";
+        //         // }
+        // }
+
+
 }
 
 
@@ -131,23 +162,35 @@ void Mesh::updateAnimation()
         // FIXME: blend the vertices to animated_vertices, rather than copy
         //        the data directly.
 
-        // for(int i = 0; i < vertices.size(); ++i)
-        // {
-        //         vec4 v = vertices.at(i);
-        //         vec4 newV(0.0);
-        //         for(int j = 0; j < skeleton.bones.size(); ++j) {
-        //                 Bone* b = skeleton.getBoneFromID(j);
-        //                 float weight = boneMatrix[j][i]; 
-        //                 newV += boneMatrix[j][i] * b->D * inverse(b->U) * v;
-        //         }
-        // }
+        for(int i = 0; i < vertices.size(); ++i)
+        {
+                vec4 v = vertices.at(i);
+                vec4 newV(0.0);
+                for(int j = 0; j < skeleton.bones.size(); ++j) {
+                        Bone* b = skeleton.getBoneFromID(j);
+                        
+                        if(b == nullptr)
+                        {
+                                // cout << "bad bone ID\n\n";
+                                continue;
+                        }        
+
+                        float weight = boneMatrix[j][i]; 
+                        mat4 D = b->D;
+
+                        // cout << "b->U: " << b->U << endl;
+
+                        mat4 invU = inverse(b->U);
+                        newV += weight * D * invU * v;
+                }
+                animated_vertices[i] = newV;
+        }
 
 
-        // for(int i = 0; i<animated_vertices.size(); ++i)
-        // {
-        //         cout << "vertex: " << animated_vertices.at(i) << endl; 
-        // }
-
+        for(int i = 0; i<animated_vertices.size(); ++i)
+        {
+                cout << "vertex: " << animated_vertices.at(i) << endl; 
+        }
 }
 
 

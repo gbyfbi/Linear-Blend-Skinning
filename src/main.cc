@@ -462,7 +462,7 @@ int main(int argc, char* argv[])
 	mat4 R;
 	InitSkelGL(mesh, skeleton_pass_input, skeleton_pass, skelFirstTime, std_view, std_proj, false, R, -1, false);
 
-
+	mesh.animated_vertices = mesh.vertices;
 
 	bool firstTime = true;
 	RenderDataInput color_pass_input;
@@ -588,7 +588,7 @@ int main(int argc, char* argv[])
 		}
 		if (draw_object) {
 			if (gui.isPoseDirty()) {
-				mesh.updateAnimation();
+				// mesh.updateAnimation();
 				object_pass.updateVBO(0,
 						      mesh.animated_vertices.data(),
 						      mesh.animated_vertices.size());

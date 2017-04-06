@@ -41,6 +41,7 @@ struct Bone {
 	int ID;
 	mat4 U;
 	mat4 D;
+	bool calculatedU;
 	Joint* source;
 	Joint* destination;
 	float length;
@@ -82,6 +83,8 @@ struct Bone {
 		T = T0;
 		R = R0; 
 		S = R0;
+
+		calculatedU = false;
 	}	
 };
 
@@ -98,6 +101,8 @@ struct Skeleton {
 
 	std::unordered_map<int, mat4> boneUMap;
 
+	std::unordered_map<int, Bone *> BoneIDMap;
+
 	
 	//maps a joint's ID to the list of bones where that joint
 	//is the source (can be more than one bone with the same source)
@@ -106,8 +111,6 @@ struct Skeleton {
 	std::vector<glm::vec4> skel_vertices;
 	std::vector<glm::uvec2> skel_lines;
 	vector<float> change_color;
-
-	bool calculatedU = false;
 
 	//should be exclusive of limit:
 	//think of limit as the number of bones
@@ -124,11 +127,19 @@ struct Skeleton {
 	}
 
 	Bone* getBoneFromID(int ID) {
-	        for (int i = 0; i < bones.size(); i++) {
-	                if (bones.at(i)->ID == ID) {
-	                        return bones.at(i);
-	                }
-	        }
+		try{
+			Bone *b = BoneIDMap.at(ID);
+			return b;
+		}
+		catch(out_of_range &e)
+		{
+			return nullptr;
+		}
+	        // for (int i = 0; i < bones.size(); i++) {
+	        //         if (bones.at(i)->ID == ID) {
+	        //                 return bones.at(i);
+	        //         }
+	        // }
 	}
 
 	void calculateAxes(vec3 t, vec3 &n, vec3 &b)
@@ -289,7 +300,8 @@ struct Skeleton {
 
                     Bone* b = new Bone(p, j, l, p->offset, t, T, R);
                     b->ID = bones.size();
-		    this->bones.push_back(b);
+		    		this->bones.push_back(b);
+		    		BoneIDMap.insert(std::make_pair(b->ID, b));
 
     				vector<Bone*> jointBones;
                     try{
@@ -503,20 +515,15 @@ struct Skeleton {
 			{
 				mat4 U(getParentWP2(j->pID));
 
-				if(calculatedU == false)
-				{
-					vector<Bone *> boneChildren = retJointBones(i);
-					for (int i = 0; i < boneChildren.size(); i++) {
+				vector<Bone *> boneChildren = retJointBones(i);
+				for (int i = 0; i < boneChildren.size(); i++) {
+					if(boneChildren.at(i)->calculatedU == false)
+					{
+						boneChildren.at(i)->calculatedU = true;
 						boneChildren.at(i)->U = U;
 					}
-					calculatedU = true;			
-				}
-				else
-				{
-					vector<Bone *> boneChildren = retJointBones(i);
-					for (int i = 0; i < boneChildren.size(); i++) {
+					else
 						boneChildren.at(i)->D = U;
-					}
 				}
 
 				skel_vertices[i] = 	translate(j->offset) * getParentWP(j->pID);
@@ -555,15 +562,15 @@ struct Skeleton {
 
 	mat4 getParentWP2(int pID)
 	{
-		if(pID==0)
-			mat4(1.0f);
-
 		Joint *p = joints.at(pID);
 		int gID = -1;
 		gID = p->pID;
 		if(!legalID(gID, joints.size()))
 		{
 			cout << "p is: " << p->ID << "\n";		
+		}
+		else if(gID == 0){
+			return translate(p->offset);
 		}
 		else
 		{
