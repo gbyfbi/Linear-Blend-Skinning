@@ -531,10 +531,7 @@ int main(int argc, char* argv[])
 					color_pass.setup();
 					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
 
-					mesh.updateAnimation();
-					object_pass.updateVBO(0,
-				      mesh.animated_vertices.data(),
-				      mesh.animated_vertices.size());
+					mesh.updateAnimation(mesh.skeleton.skel_lines.at(current_bone)[1]);
 				}
 				else if(drag) {
 					float angle = gui.angle;
@@ -551,11 +548,7 @@ int main(int argc, char* argv[])
 					color_pass.setup();
 					CHECK_GL_ERROR(glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0));
 
-					mesh.updateAnimation();
-					object_pass.updateVBO(0,
-				      mesh.animated_vertices.data(),
-				      mesh.animated_vertices.size());
-
+					mesh.updateAnimation(mesh.skeleton.skel_lines.at(current_bone)[1]);
 				}
 			}
 			if((!bM)||(bM && !drag && !roll))
@@ -587,23 +580,21 @@ int main(int argc, char* argv[])
 			CHECK_GL_ERROR(glDrawElements(GL_TRIANGLES, floor_faces.size() * 3, GL_UNSIGNED_INT, 0));
 		}
 		if (draw_object) {
-			if (gui.isPoseDirty()) {
-				// mesh.updateAnimation();
 				object_pass.updateVBO(0,
-						      mesh.animated_vertices.data(),
-						      mesh.animated_vertices.size());
+		  	    mesh.animated_vertices.data(),
+    		      mesh.animated_vertices.size());
 #if 0
 				// For debugging if you need it.
 				for (int i = 0; i < 4; i++) {
 					std::cerr << " Vertex " << i << " from " << mesh.vertices[i] << " to " << mesh.animated_vertices[i] << std::endl;
 				}
 #endif
-				gui.clearPose();
-			}
+				// gui.clearPose();
+			
 			object_pass.setup();
 			int mid = 0;
 			while (object_pass.renderWithMaterial(mid))
-				mid++;
+				++mid;
 #if 0	
 			// For debugging also
 			if (mid == 0) // Fallback

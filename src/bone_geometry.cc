@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <algorithm>
+#include <cmath>
 
 using namespace std;
 
@@ -27,6 +28,8 @@ std::ostream& operator<<(std::ostream& os, const BoundingBox& bounds)
 
 vector<vector<float> > boneMatrix;
 // FIXME: Implement bone animation.
+
+std::unordered_map <int, vector<pair<int, float> > >jointTuples;
 
 
 Mesh::Mesh()
@@ -80,7 +83,6 @@ void Mesh::loadpmd(const std::string& fn)
 
         std::vector<SparseTuple> tup;
         mr.getJointWeights(tup);
-        //std::map<int, vector<pair<int,int>>> boneWeights;
 
         int max_vec = 0;
         for (int i = 0; i < tup.size(); i++) {
@@ -90,104 +92,110 @@ void Mesh::loadpmd(const std::string& fn)
         ++max_vec;
         cout << "num connections: " << tup.size() << endl;
         cout << "max vec_id: " << max_vec << endl;      
-
-//        boneMatrix = new int[skeleton.bones.size()][max_vec];//each row corresponds to one bone (one source joint),
-                                                        //and within each row, the elements correspond to different mesh vertices
-                                                        //on which the bone has influence
      
 
-        for(int r = 0; r<skeleton.bones.size(); ++r) {
-                vector<float> row(max_vec);
-                boneMatrix.push_back(row);
-        }
-	
-	for(int i = 0; i < skeleton.bones.size(); i++) {
-		vector<pair<int,float>> v;
-		this->skeleton.boneWeights.push_back(v);
-	}
-
-        int idCounter = 0;   
-        for (int i = 0; i < tup.size(); i++) {
-            
-                //get the list of bones that starts at source joint with ID jid
-                int jointNum = tup[i].jid;
-                vector<Bone*> boneChildren = skeleton.retJointBones(jointNum);
-		pair<int, float> t;
-		t.first = tup[i].vid;
-		t.second = tup[i].weight;
-
-                for (int j = 0; j < boneChildren.size(); j++) {
-
-                        Bone* b = boneChildren.at(j);
-
-			if (t.second != 0.0) {
-				this->skeleton.boneWeights.at(b->ID).push_back(t);
-			}
+        //for each joint
+        //create a list (vector)
+        //of vertex-weight pairs
+        //which represent how much impact
+        //the movements of this joint
+        //have on those vertices
+        for(int i = 0; i < tup.size(); ++i)
+        {
+                try {
+                        vector<pair<int, float> > thisJoint = jointTuples.at(tup[i].jid);
+                        thisJoint.push_back(make_pair(tup[i].vid, tup[i].weight));
+                        jointTuples.at(tup[i].jid) = thisJoint;
+                }
+                catch(out_of_range &e)
+                {
+                        vector<pair<int, float> > thisJoint;
+                        thisJoint.push_back(make_pair(tup[i].vid, tup[i].weight));
+                        jointTuples.insert(make_pair(tup[i].jid, thisJoint));
                 }
         }
 
 
-
-
-        // for(int i = 0; i < skeleton.bones.size(); ++i)
-        // {
-        //         Bone* b = skeleton.bones.at(i);
-        //         cout << "bone ID is: " << b->ID << endl;
-
-
-
-        //         // try{
-        //         //         cout << "bone number: " << i <<  " is " << skeleton.BoneIDMap.at(i) << endl;                       
-        //         // }
-        //         // catch( out_of_range &e)
-        //         // {
-        //         //         cout << "bad bone ID";
-        //         // }
+        // for(int r = 0; r<skeleton.bones.size(); ++r) {
+        //         vector<float> row(max_vec);
+        //         boneMatrix.push_back(row);
         // }
 
+        // int idCounter = 0;   
+        // for (int i = 0; i < tup.size(); i++) {
+            
+        //         int jointNum = tup[i].jid;
+        //         vector<Bone*> boneChildren = skeleton.retJointBones(jointNum);
 
+        //         for (int j = 0; j < boneChildren.size(); j++) {
+
+        //                 Bone* b = boneChildren.at(j);
+                        
+        //                 float weight = tup[i].weight;
+
+        //                 boneMatrix.at(b->ID).at(tup[i].vid) = weight;
+
+        //                 if(fabs(weight) > 0)
+        //                 {
+        //                         animIdxList.push_back(make_pair(b->ID, tup[i].vid));
+        //                 }
+        //         }
+        // }
 }
 
+void Mesh::updateAnimation(int sourceJointIdx)
+{
+        //get the list of bones where this is the source joint
+        vector<Bone *> bonesList = skeleton.retJointBones(sourceJointIdx);
+
+        //get the list of vertex-weight pairs for this joint
+        //holding info about the repective impacts the movements of this joint
+        //have on the respective vertices
+        vector<pair<int, float> > thisJoint = jointTuples.at(sourceJointIdx);
+
+        for(pair<int, float> p: thisJoint)
+        {
+                vec4 newV(0.0f);
+                int vid = p.first;
+
+                float weight = p.second;
+                vec4 v = vertices.at(vid);
+
+                for(Bone* b: bonesList)
+                {
+                        newV += (weight * b->DinvU * v);
+                }
+                animated_vertices.at(vid) = newV;
+        }
+}
 
 
 void Mesh::updateAnimation()
 {
-        animated_vertices = vertices;
-        // FIXME: blend the vertices to animated_vertices, rather than copy
-        //        the data directly.
-	
-	
-	for (int i = 0; i < animated_vertices.size(); i++) {
-		animated_vertices.at(i) = vec4(0.0);
-	}
-	
-
-	for (int i = 0; i < skeleton.boneWeights.size(); i++) {
-		Bone* b = skeleton.getBoneFromID(i);
-		vector<pair<int,float>> v = skeleton.boneWeights.at(i);
-		
-		for(int j = 0; j < v.size(); j++) {
-			pair<int,float> p = v.at(j);
-			animated_vertices.at(p.first) += p.second * b->D * inverse(b->U) * vertices.at(p.first);
-		}
-	}
-	/*
-	for (int i = 0; i < skeleton.bones.size(); i++) {
-		Bone* b = skeleton.getBoneFromID(i);
-		for (int j = 0; j < animated_vertices.size(); j++) {
-			cout << i << " " << j << endl;
-			animated_vertices.at(j) += boneMatrix[i][j] * b->D * inverse(b->U) * vertices.at(j);
-		}
-	}
-	*/
-	cout << " UPDATED " << endl;
-
-
-        for(int i = 0; i<animated_vertices.size(); ++i)
+        for(int idx = 0; idx < animIdxList.size(); ++idx)
         {
-                cout << "vertex: " << i << ";  pos: " << animated_vertices.at(i) << endl; 
+                pair<int, int> IDXs = animIdxList.at(idx);
+                animated_vertices.at(IDXs.second) = vec4(0.0f, 0.0f, 0.0f, 0.0f);
         }
-	
+
+        for(int idx = 0; idx < animIdxList.size(); ++idx)
+        {
+                pair<int, int> IDXs = animIdxList.at(idx);
+         
+                vec4 v = vertices.at(IDXs.second);
+                Bone* b = skeleton.getBoneFromID(IDXs.first);
+
+                float weight = boneMatrix.at(IDXs.first).at(IDXs.second);
+                mat4 D = b->D;
+                mat4 invU = inverse(b->U);
+
+                animated_vertices.at(IDXs.second) += (weight * D * invU * v);
+        }
+
+        // for(int i = 0; i<animated_vertices.size(); ++i)
+        // {
+        //         cout << "vertex: " << animated_vertices.at(i) << endl; 
+        // }
 }
 
 

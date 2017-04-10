@@ -41,6 +41,7 @@ struct Bone {
 	int ID;
 	mat4 U;
 	mat4 D;
+	mat4 DinvU;
 	bool calculatedU;
 	Joint* source;
 	Joint* destination;
@@ -92,7 +93,7 @@ struct Skeleton {
 	Skeleton() {};
 
 	std::vector<Bone*> bones;
-	std::vector<std::vector<pair<int,float>>> boneWeights;
+
 	//maps IDs to Joints
 	std::unordered_map<int, Joint*> joints;
 
@@ -288,10 +289,10 @@ struct Skeleton {
                     float l = glm::length(j->offset);
                     vec3 t = glm::normalize(j->offset);
 
-			mat4 R;
-			vec3 n, bAxis;
-			calculateAxes(t, n, bAxis);	
-			calculateR2(R, t, n, bAxis);
+					mat4 R;
+					vec3 n, bAxis;
+					calculateAxes(t, n, bAxis);
+					calculateR2(R, t, n, bAxis);
 
                     //find the translation matrix to get from the parent
                     //origin to the child origin
@@ -515,7 +516,7 @@ struct Skeleton {
 			{
 				mat4 U(getParentWP2(j->pID));
 
-				vector<Bone *> boneChildren = retJointBones(i);
+				vector<Bone *> boneChildren = retJointBones(j->pID);
 				for (int i = 0; i < boneChildren.size(); i++) {
 					if(boneChildren.at(i)->calculatedU == false)
 					{
@@ -523,7 +524,10 @@ struct Skeleton {
 						boneChildren.at(i)->U = U;
 					}
 					else
+					{
 						boneChildren.at(i)->D = U;
+						boneChildren.at(i)->DinvU = (U * inverse(boneChildren.at(i)->U));
+					}		
 				}
 
 				skel_vertices[i] = 	translate(j->offset) * getParentWP(j->pID);
@@ -589,6 +593,7 @@ struct Skeleton {
 struct Mesh {
 	Mesh();
 	~Mesh();
+	std::vector<std::pair<int, int> > animIdxList;
 	std::vector<glm::vec4> vertices;
 	std::vector<glm::vec4> animated_vertices;
 	std::vector<glm::uvec3> faces;
@@ -601,6 +606,7 @@ struct Mesh {
 
 	void loadpmd(const std::string& fn);
 	void updateAnimation();
+	void updateAnimation(int sourceJointIdx);
 	int getNumberOfBones() 
 	{ 
 		return skeleton.bones.size();
