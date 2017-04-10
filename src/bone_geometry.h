@@ -92,7 +92,7 @@ struct Skeleton {
 	Skeleton() {};
 
 	std::vector<Bone*> bones;
-
+	std::vector<std::vector<pair<int,float>>> boneWeights;
 	//maps IDs to Joints
 	std::unordered_map<int, Joint*> joints;
 
@@ -288,10 +288,10 @@ struct Skeleton {
                     float l = glm::length(j->offset);
                     vec3 t = glm::normalize(j->offset);
 
-					mat4 R;
-					vec3 n, bAxis;
-					calculateAxes(t, n, bAxis);
-					calculateR2(R, t, n, bAxis);
+			mat4 R;
+			vec3 n, bAxis;
+			calculateAxes(t, n, bAxis);	
+			calculateR2(R, t, n, bAxis);
 
                     //find the translation matrix to get from the parent
                     //origin to the child origin
