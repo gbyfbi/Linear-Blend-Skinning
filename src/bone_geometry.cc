@@ -145,6 +145,13 @@ void Mesh::loadpmd(const std::string& fn)
 
 void Mesh::updateAnimation(int sourceJointIdx)
 {
+        if(!skeleton.legalID(sourceJointIdx, skeleton.joints.size()))
+                return;
+
+        if(!skeleton.legalID(sourceJointIdx, jointTuples.size()))
+                return;
+
+
         //get the list of bones where this is the source joint
         vector<Bone *> bonesList = skeleton.retJointBones(sourceJointIdx);
 
@@ -167,6 +174,11 @@ void Mesh::updateAnimation(int sourceJointIdx)
                 }
                 animated_vertices.at(vid) = newV;
         }
+
+        vector<int> childJoints = skeleton.getChildJoints(skeleton.joints.at(sourceJointIdx));
+
+        for(int childIdx: childJoints)
+                updateAnimation(childIdx);
 }
 
 
