@@ -1,8 +1,0 @@
-Rishi Amarnani, rsa742
-Nick Abbs, nka337
-
-Both "Parsing Joints and Weights" and "Bone Picking" have been implemented.
-Bone manipulation has not been implemented.
-
-We intend to get bone manipulation implemented within the next few days,
-so that we can move onto project 5. 
